@@ -1562,6 +1562,7 @@ class AccountsWindow:
         self.ignore_events = False
         self.need_relogin = False
         self.resend_presence = False
+        self.changed_password_account = None
 
         self.update_proxy_list()
         self.xml.connect_signals(self)
@@ -2230,7 +2231,13 @@ class AccountsWindow:
     def on_password_entry1_changed(self, widget):
         if self.ignore_events:
             return
-        passwords.save_password(self.current_account, widget.get_text())
+        self.changed_password_account = self.current_account
+
+    def on_password_entry1_focus_out_event(self, widget, event):
+        if self.changed_password_account:
+            passwords.save_password(self.changed_password_account, widget.get_text())
+            self.changed_password_account = None
+        return False
 
     def on_save_password_checkbutton1_toggled(self, widget):
         if self.ignore_events:

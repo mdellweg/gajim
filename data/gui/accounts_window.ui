@@ -270,6 +270,7 @@
                                 <property name="visibility">False</property>
                                 <property name="activates_default">True</property>
                                 <signal name="changed" handler="on_password_entry1_changed" swapped="no"/>
+                                <signal name="focus-out-event" handler="on_password_entry1_focus_out_event" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>
