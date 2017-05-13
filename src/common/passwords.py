@@ -25,6 +25,7 @@
 ##
 
 import os
+import subprocess
 import logging
 import gi
 from common import gajim
@@ -138,9 +139,52 @@ class SecretWindowsPasswordStorage(PasswordStorage):
         return self.win_keyring.get_password('gajim', account_name)
 
 
+class zx2c4PasswordStorage(PasswordStorage):
+    """ zx2c4's password store (pass) """
+
+    def __init__(self):
+        # check, whether "pass" is available
+        subprocess.run(["pass", "version"], check=True, stdout=subprocess.PIPE)
+
+    def get_password(self, account_name):
+        name = gajim.config.get_per("accounts", account_name, "name")
+        hostname = gajim.config.get_per("accounts", account_name, "hostname")
+        if name and hostname:
+            jid = "{}@{}".format(name, hostname)
+            try:
+                p = subprocess.run(["pass", "show", "gajim/{}".format(jid)],
+                                   check=True, stdout=subprocess.PIPE)
+                password = p.stdout.decode().split()[0]
+                return password
+            except:
+                pass
+        return None
+
+    def save_password(self, account_name, password):
+        if password == self.get_password(account_name):
+            return None
+        name = gajim.config.get_per("accounts", account_name, "name")
+        hostname = gajim.config.get_per("accounts", account_name, "hostname")
+        if name and hostname:
+            jid = "{}@{}".format(name, hostname)
+            try:
+                p = subprocess.run(["pass", "insert", "--echo", "--force",
+                                    "gajim/{}".format(jid)],
+                                   input=password.encode(), check=True,
+                                   stdout=subprocess.PIPE)
+            except:
+                pass
+        return None
+
+
 storage = None
 def get_storage():
     global storage
+    if storage is None: # None is only in first time get_storage is called
+        try:
+            storage = zx2c4PasswordStorage()
+        except:
+            pass
     if storage is None: # None is only in first time get_storage is called
         global Secret
         if gajim.config.get('use_keyring'):
