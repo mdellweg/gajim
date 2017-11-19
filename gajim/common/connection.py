@@ -673,6 +673,7 @@ class Connection(CommonConnection, ConnectionHandlers):
         self.last_io = app.idlequeue.current_time()
         self.last_sent = []
         self.password = passwords.get_password(name)
+        self.read_password = self.password
 
         self.music_track_info = 0
         self.location_info = {}
@@ -1496,6 +1497,9 @@ class Connection(CommonConnection, ConnectionHandlers):
             self.last_io = app.idlequeue.current_time()
             self.connected = 2
             self.retrycount = 0
+            if self.password != self.read_password:
+                passwords.set_password(self.name, self.password)
+                self.read_password = self.password
             if self.on_connect_auth:
                 self.on_connect_auth(con)
                 self.on_connect_auth = None
